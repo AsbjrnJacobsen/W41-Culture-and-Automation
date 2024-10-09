@@ -19,12 +19,13 @@ pipeline {
         stage('Deploy') {
             steps {
                 //Login to docker
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')])
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
                     // Build dockerfile into image.
                     sh "docker build -t loggingapiimage -f LoggingAPI/Dockerfile ."
                     sh 'docker login -u $USERNAME -p $PASSWORD'
                     // push dockerimage to dockerhub
                     sh "docker push loggingapiimage:latest"
+                }
             }
         }
     }

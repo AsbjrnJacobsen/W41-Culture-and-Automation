@@ -21,7 +21,7 @@ pipeline {
                 //Login to docker
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
                     // Build dockerfile into image.
-                    sh "docker build -t loggingapiimage -f LoggingAPI/Dockerfile ."
+                    sh "docker build -t $USERNAME/loggingapiimage:latest -f LoggingAPI/Dockerfile ."
                     sh 'docker login -u $USERNAME -p $PASSWORD'
                     // push dockerimage to dockerhub.
                     sh "docker push $USERNAME/loggingapiimage:latest"

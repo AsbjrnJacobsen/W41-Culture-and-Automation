@@ -4,15 +4,15 @@ pipeline {
     stages {                
         stage('Build') {
             steps {
-                // Build the project (example for a Maven project)
+                // Build project
                 dotnetBuild configuration: 'Debug', project: 'LoggingAPI', sdk: 'sdk 8.0'
             }
         }
 
         stage('Test') {
             steps {
-                // Run unit tests (example for a Maven project)
-                dotnetBuild configuration: 'Debug', project: 'LoggingAPI', sdk: 'sdk 8.0'
+                // Run unit tests
+                dotnetTest configuration: 'Debug', sdk: 'sdk 8.0'
             }
         }
 

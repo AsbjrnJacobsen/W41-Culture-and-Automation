@@ -1,0 +1,73 @@
+﻿services:
+  # Load balancer using Nginx
+  nginx:
+    depends_on:
+      - logging-api
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    entrypoint: >
+      sh -c "
+      echo '
+      events { }
+      
+      http {
+          upstream web_backend {
+              server logging-api;
+              server logging-api;
+          }
+      
+          server {
+              listen 80;
+              server_name localhost;
+      
+              location / {
+                  proxy_pass http://web_backend;
+                  proxy_set_header Host $$host;
+                  proxy_set_header X-Real-IP $$remote_addr;
+                  proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $$scheme;
+              }
+          }
+      }
+      ' > /etc/nginx/nginx.conf &&
+      nginx -g 'daemon off;'
+      "    
+  
+  # The API we want to scale
+  logging-api:
+    build:
+      context: .
+      dockerfile: LoggingAPI/Dockerfile
+    depends_on:
+      migration-runner:
+        condition: service_completed_successfully
+    deploy:
+      replicas: 2
+  
+  # SQL Server
+  logging-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      MSSQL_SA_PASSWORD: "Pepsi1234!"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - logging-db:/var/opt/mssql
+    healthcheck:
+      test: [ "CMD-SHELL", "pgrep sqlservr" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+  
+  # Run migrations after DB is running
+  migration-runner:
+    build:
+      context: .
+      dockerfile: LoggingAPI/Migration.Dockerfile
+    depends_on:
+      logging-db:
+        condition: service_healthy
+        
+volumes:
+  logging-db:
